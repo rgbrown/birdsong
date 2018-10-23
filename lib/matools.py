@@ -1,5 +1,6 @@
 import wavio # Had to install this using pip - scipy.wavefile cannot handle 24 bit wave files
 import numpy as np
+import matplotlib.pyplot as plt
 import scipy.signal
 class MicrophoneArray:
     def __init__(self, positions, c_sound=343):
@@ -25,12 +26,14 @@ class MicrophoneArray:
         # d is the number of samples (non-integer) that the signal received at each microphone will be ahead of the
         # signal received at the reference position (origin)
         d = self.fs/self.c_sound * np.dot(self.positions, np.array([np.cos(theta), np.sin(theta)]))
+        print(d)
         t_s_corrected = self.fs*t_start - d
         y = np.zeros((self.n_microphones, n_s))
         
         for i in range(self.n_microphones):
             t_s = t_s_corrected[i]
             int_delay = int(round(t_s - N/2)) # the N/2 factor is so that the interpolation is performed in the optimal range
+            print(int_delay)
             frac_delay = t_s - int_delay
             h = lagrange_filter(frac_delay, N)
             y2 = self.data[i, int_delay:(int_delay + n_s + N)]
