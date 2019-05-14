@@ -10,17 +10,32 @@ class MicrophoneArray:
         self.n_microphones = len(positions)
 
     def generate_synthetic_data(self, x, fs, theta):
-        # Create a data array corresponding to the microphone positions
-        N = 6 # delay filter order
-        tau = -self.delay_times(theta)
-        t_start = tau + min(tau) + N/fs
-        width = len(x)/fs - max(t_start) - N/fs
-        n_s = int(round(width*fs))
+        """ Generate an array of synthetic data based on the audio in x. Audio will be shifted according to the array geometry in the microphone array and the speed of sound in there also
+        """
+
+        # Compute the requisite delay for each microphone in samples
+        delay = self.delay_times(theta)*fs
+        
+        # Work out the Lagrange interpolation filter details
+        N = 6 # lagrange interpolation filter order
+        int_delay = np.round(delay - N/2).astype('int')
+        frac_delay = delay - int_delay # should be in optimal range
+
+        # make it so the smallest of the integer delays is zero
+        int_delay -= min(int_delay)
+        max_int_delay = max(int_delay)
+
+        # number of samples in the output
+        n_s = len(x) - max_int_delay - N
+
+        # The signal itself will start at max_int_delay
+        # Filtering should start at max_int_delay - int_delay
         y = []
         for i in range(self.n_microphones):
-            y.append(shifted_window(x, fs, t_start[i], width))
-        self.data = np.array(y)
-        self.fs = fs
+            h = lagrange_filter(frac_delay[i], N=N)
+            x_slice = x[(max_int_delay - int_delay[i]):]
+            y.append(scipy.signal.lfilter(h, 1, x_slice)[N:(N+n_s)])
+        return np.array(y)
         
     def load_data(self, base_name):
         data = []
@@ -49,6 +64,7 @@ class MicrophoneArray:
         n_samples = len(self.data[0])
         return np.arange(n_samples)/self.fs
         
+    # This might be dodgy
     def get_window(self, t_start, width, theta):
         N = 6 # filter order
         n_s = int(np.round(width*self.fs)) # window size (in samples)
@@ -70,7 +86,8 @@ def lagrange_filter(D, N=4):
     for n in range(N+1):
         w = np.setdiff1d(np.arange(N+1), n)
         h[n] = np.prod((D - w) / (n - w))
-    return(np.flip(h, 0))
+    return(h)
+    #return(np.flip(h, 0))
     #return h
 
 def shifted_window(x, fs, t_start, width, N=6):
