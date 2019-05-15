@@ -11,7 +11,7 @@ ma = matools.MicrophoneArray([
     [0,0]])
 
 fs, x = wavfile.read('tui.wav')
-theta = np.pi/3
+theta =  90 * np.pi/180
 y = ma.generate_synthetic_data(x, fs, theta)
 
 y0 = y[4]
@@ -27,7 +27,7 @@ for i in range(ma.n_microphones):
 Y = np.matrix(Y)
 
 # there is a peak at index 9937
-idx = 4000
+idx = 9937
 f = freqs[idx]
 Rxx = np.dot(Y[:,idx], Y[:,idx].H)
 lam, V = np.linalg.eig(Rxx)
@@ -40,4 +40,17 @@ print('The absolute values of the eigenvalues of R_xx are:')
 print(np.abs(lam))
 print('Steering vector / eigenvector of max eigenvalue:')
 print((ma.steering_vector(theta, f) / vv).T)
+
+# Let's do the MUSIC spectrum
+En = V[:, np.setdiff1d(np.arange(5), idx)]
+n_music = 200
+theta_range = np.linspace(0, 2*np.pi, n_music)
+P_music = np.zeros(n_music)
+for i in range(n_music):
+    sv = ma.steering_vector(theta_range[i], f)
+    vec = np.dot(En.H, ma.steering_vector(theta_range[i], f))
+    P_music[i] = 1/np.linalg.norm(vec)**2
+
+plt.plot(theta_range*180/np.pi, P_music)
+plt.show()
 
