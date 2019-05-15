@@ -41,12 +41,6 @@ def eig_sorted(A):
     V = V[:, idx]
     return lam, V
 
-def U_matrix(i):
-    Rxx = np.dot(X[:, i], X[:, i].H)
-    lam, V = eig_sorted(Rxx)
-    return V
-
-
 
 def music(idx, n_music=200):
     """ Perform MUSIC at frequency freqs[idx]"""
@@ -73,6 +67,11 @@ def music(idx, n_music=200):
     print('\nSteering vector / eigenvector of max eigenvalue:')
     print((ma.steering_vector(theta, f) / vv).T)
     return P_music, theta_range
+
+def U_matrix(i):
+    Rxx = np.dot(X[:, i], X[:, i].H)
+    lam, V = eig_sorted(Rxx)
+    return V
 
 def afmusic(i0, n_music=200):
     f0 = freqs[i0]
