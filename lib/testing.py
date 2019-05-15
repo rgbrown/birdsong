@@ -27,7 +27,7 @@ for i in range(ma.n_microphones):
 Y = np.matrix(Y)
 
 # there is a peak at index 9937
-idx = 9937
+idx = 200
 f = freqs[idx]
 Rxx = np.dot(Y[:,idx], Y[:,idx].H)
 lam, V = np.linalg.eig(Rxx)
@@ -35,11 +35,15 @@ idx = np.argmax(abs(lam))
 vv = V[:, idx].flatten()
 
 print('----------')
-print('At frequency {:.5} Hz, there is a peak'.format(f))
-print('The absolute values of the eigenvalues of R_xx are:')
+print('Performing MUSIC at {:.5} Hz'.format(f))
+print('----------------------')
+print('Steering vector subspace check:')
+print('    At the correct angle of {:.3}'.format(theta*180/np.pi))
+print('    The absolute values of the eigenvalues of R_xx are:')
 print(np.abs(lam))
-print('Steering vector / eigenvector of max eigenvalue:')
+print('    Steering vector / eigenvector of max eigenvalue:')
 print((ma.steering_vector(theta, f) / vv).T)
+
 
 # Let's do the MUSIC spectrum
 En = V[:, np.setdiff1d(np.arange(5), idx)]
