@@ -2,6 +2,7 @@ import wavio # Had to install this using pip - scipy.wavefile cannot handle 24 b
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.signal
+from scipy.io import wavfile
 
 class MicrophoneArray:
     def __init__(self, positions, c_sound=343):
@@ -10,7 +11,9 @@ class MicrophoneArray:
         self.n_microphones = len(positions)
 
     def generate_synthetic_data(self, x, fs, theta):
-        """ Generate an array of synthetic data based on the audio in x. Audio will be shifted according to the array geometry in the microphone array and the speed of sound in there also
+        """ Generate an array of synthetic data based on the audio in x.
+        Audio will be shifted according to the array geometry in the
+        microphone array and the speed of sound in there also
         """
 
         # Compute the requisite delay for each microphone in samples
@@ -44,6 +47,15 @@ class MicrophoneArray:
             data.append(foo.data.astype('float64').flatten() / (2**(foo.sampwidth*8-1)))
         self.fs = foo.rate
         self.data = np.array(data)
+
+    def load_data_wavfile(self, base_name):
+        data = []
+        for i in range(self.n_microphones):
+            foo = wavfile.read(base_name + '{}.wav'.format(i+1))
+            data.append(foo[1].astype('float64').flatten())
+        self.fs = foo[0]
+        self.data = np.array(data)
+
 
     def get_sample(self, i_start, width):
         return self.data[:,i_start:(i_start+width)]
